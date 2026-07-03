@@ -4,41 +4,37 @@ import { ARCHITECT_SKILLS_PLAN } from './skills';
 
 async function run() {
   try {
-    // 1. Get automatic GitHub Token from pipeline context
     const token = core.getInput('GITHUB_TOKEN', { required: true });
     const octokit = github.getOctokit(token);
     const { owner, repo, number: pull_number } = github.context.issue;
 
-    // 2. Check if user configured a custom Generic Agent AI API Key (Option 1)
     const agentAiKey = core.getInput('AGENT_AI_KEY', { required: false });
 
     console.log(`[ArchGuard] Fetching Git Diff for PR #${pull_number}...`);
 
-    // 3. Retrieve the Pull Request Git Diff content
-    const { data: diff } = await octokit.rest.pulls.get({
+    // SỬA LỖI TẠI ĐÂY: Gọi API request trực tiếp để ép GitHub trả về kiểu text/plain dữ liệu Diff thuần túy
+    const { data: diff } = await octokit.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
       owner,
       repo,
       pull_number,
-      mediaType: { format: 'diff' }
+      headers: {
+        accept: 'application/vnd.github.v3.diff', // Ép định dạng trả về là chuỗi Diff văn bản
+      },
     });
 
-    if (!diff) {
-      core.setFailed('[ArchGuard] Could not retrieve Git Diff.');
+    if (!diff || typeof diff !== 'string') {
+      core.setFailed('[ArchGuard] Could not retrieve Git Diff string.');
       return;
     }
 
     let aiResponse = "";
 
-    // Assemble the comprehensive system prompt from skills.ts
     const systemPrompt = `${ARCHITECT_SKILLS_PLAN.system_role}\n\n` +
                          `CRITICAL CHECKLIST:\n${ARCHITECT_SKILLS_PLAN.evaluation_checklist.join('\n')}\n\n` +
                          `REQUIRED OUTPUT FORMAT:\n${ARCHITECT_SKILLS_PLAN.output_format}`;
 
-    // 4. Smart Routing between Option 1 (Custom Generic Key) and Option 2 (Free Gateway)
     if (agentAiKey) {
-      // --- OPTION 1: Routed through a Generic / Custom AI Provider Endpoint ---
       console.log("[ArchGuard] AGENT_AI_KEY detected. Routing to Generic AI Provider endpoint...");
-      
       const GENERIC_AI_URL = "https://api.your-ai-service.com/v1/chat/completions";
       
       const response = await fetch(GENERIC_AI_URL, {
@@ -65,10 +61,10 @@ async function run() {
       aiResponse = result.choices?.[0]?.message?.content || "LGTM 👍";
 
     } else {
-      // --- OPTION 2: Fallback to your Free Serverless AI Gateway ---
       console.log("[ArchGuard] No API Key provided. Routing to Free Serverless AI Gateway...");
       
-      const CLOUDFLARE_GATEWAY_URL = "https://archguard-gateway.paudang.workers.dev/";
+      // Bỏ dấu gạch chéo cuối cùng để đồng bộ URL endpoint
+      const CLOUDFLARE_GATEWAY_URL = "https://archguard-gateway.paudang.workers.dev";
 
       const response = await fetch(CLOUDFLARE_GATEWAY_URL, {
         method: "POST",
@@ -76,11 +72,13 @@ async function run() {
           "Content-Type": "application/json",
           "User-Agent": `ArchGuard-Agent-${owner}`
         },
-        body: JSON.stringify({ diff })
+        body: JSON.stringify({ diff }) // Giờ đây diff đã là chuỗi ký tự String thuần chuẩn đét!
       });
 
       if (!response.ok) {
-        throw new Error(`Cloudflare AI Gateway returned status: ${response.status}`);
+        // Thử đọc chi tiết lỗi từ Cloudflare trả về để dễ debug
+        const errText = await response.text();
+        throw new Error(`Cloudflare AI Gateway returned status: ${response.status} - ${errText}`);
       }
 
       const result: any = await response.json();
@@ -89,7 +87,6 @@ async function run() {
 
     const trimmedResult = aiResponse.trim();
 
-    // 5. Post the AI Architectural Review comment back to the Pull Request
     if (trimmedResult && trimmedResult !== 'LGTM 👍') {
       await octokit.rest.issues.createComment({
         owner,
