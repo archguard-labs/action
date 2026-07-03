@@ -1,0 +1,19 @@
+name: 'ArchGuard AI Reviewer'
+description: 'Automate Pull Request audits for clean architecture, decoupling, and security standards using serverless AI.'
+author: 'paudang'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  GITHUB_TOKEN:
+    description: 'The GitHub token automatically provided by the secrets context'
+    required: true
+    default: '${{ github.token }}'
+  AGENT_AI_KEY:
+    description: 'Optional: Your personal custom AI Provider API Key. If not provided, the action defaults to the free serverless gateway.'
+    required: false
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
