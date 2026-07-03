@@ -1,7 +1,10 @@
 {
-  "name": "archguard-gateway",
+  "name": "archguard-ai",
   "main": "dist/index.js",
   "compatibility_date": "2026-07-03",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "ai": {
     "binding": "AI"
   }
