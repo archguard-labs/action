@@ -23921,7 +23921,6 @@ async function run() {
       pull_number,
       headers: {
         accept: "application/vnd.github.v3.diff"
-        // Ép định dạng trả về là chuỗi Diff văn bản
       }
     });
     if (!diff || typeof diff !== "string") {
@@ -23964,14 +23963,15 @@ ${diff}` }
     } else {
       console.log("[ArchGuard] No API Key provided. Routing to Free Serverless AI Gateway...");
       const CLOUDFLARE_GATEWAY_URL = "https://archguard-gateway.paudang.workers.dev";
+      const sanitizedDiff = String(diff).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, "");
       const response = await fetch(CLOUDFLARE_GATEWAY_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "User-Agent": `ArchGuard-Agent-${owner}`
         },
-        body: JSON.stringify({ diff })
-        // Giờ đây diff đã là chuỗi ký tự String thuần chuẩn đét!
+        body: JSON.stringify({ diff: sanitizedDiff })
+        // Payload đóng gói siêu an toàn
       });
       if (!response.ok) {
         const errText = await response.text();
