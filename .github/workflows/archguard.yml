@@ -1,0 +1,30 @@
+name: ArchGuard Architectural Audit
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Dependencies & Build Action
+        run: |
+          npm ci
+          npm run build
+
+      - name: Run ArchGuard AI Reviewer
+        uses: ./
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CUSTOM_GATEWAY_URL: "https://archguard-gateway.paudang.workers.dev"
