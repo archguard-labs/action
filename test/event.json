@@ -1,0 +1,11 @@
+{
+  "repository": {
+    "owner": {
+      "login": "local-test"
+    },
+    "name": "test-repo"
+  },
+  "pull_request": {
+    "number": 999
+  }
+}

@@ -1,0 +1,50 @@
+name: E2E Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  e2e-test:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write # Required for ArchGuard to publish PR comments in BYOK mode
+      contents: read
+      id-token: write      # Required to generate dummy OIDC token for testing
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Dependencies & Build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Start Mock Server
+        run: |
+          node test/mock-server.js &
+          # Wait for server to start
+          sleep 2
+
+      - name: Test Option 1 - Cloudflare Gateway Mode (Mocked)
+        uses: ./
+        env:
+          E2E_TEST: 'true'
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GATEWAY_URL: "http://localhost:3000"
+
+      - name: Test Option 2 - BYOK Mode (Mocked)
+        uses: ./
+        env:
+          E2E_TEST: 'true'
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AGENT_AI_KEY: "mock-openai-key-123"
+          AI_PROVIDER_URL: "http://localhost:3000/v1/chat/completions"
+          AI_MODEL: "gpt-4o"

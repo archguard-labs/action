@@ -109,8 +109,12 @@ async function run() {
 
       if (response.status === 202) {
         console.log("[ArchGuard] Payload accepted by Gateway Queue. Review will be posted asynchronously.");
-        console.log("[ArchGuard] Keeping job alive for 30 seconds to ensure GITHUB_TOKEN remains valid for async webhook...");
-        await new Promise(resolve => setTimeout(resolve, 30000));
+        if (process.env.E2E_TEST !== 'true') {
+          console.log("[ArchGuard] Keeping job alive for 30 seconds to ensure GITHUB_TOKEN remains valid for async webhook...");
+          await new Promise(resolve => setTimeout(resolve, 30000));
+        } else {
+          console.log("[ArchGuard] E2E Test Mode: Skipping 30s sleep.");
+        }
         isAsyncQueued = true;
       } else {
         const result: any = await response.json();
