@@ -17,16 +17,16 @@ Most automated code reviewers catch syntax errors, linting issues, or formatting
 
 ## Architecture Overview
 ArchGuard AI is designed with an Enterprise-grade Serverless Edge Architecture to ensure zero-maintenance, infinite scalability, and top-tier security. The project is split into two components:
-* Client Side (GitHub Action Runner): [archguard-ai](https://github.com/paudang/archguard-ai)
-* Server Side (Edge Gateway): [archguard-gateway](https://github.com/paudang/archguard-gateway)
+* Client Side (GitHub Action Runner): [archguard-labs/action](https://github.com/archguard-labs/action)
+* Server Side (Edge Gateway): [archguard-labs/gateway](https://github.com/archguard-labs/gateway)
 
 ```
 +------------------------+
 |  GitHub Action Runner  | (archguard ai)
 +-----------+------------+
             |
-            | 1. Signed HTTPS POST Request
-            |    (HMAC Payload Verification)
+            | 1. OIDC Authenticated Request
+            |    (Zero-Trust JWT Verification)
             v
 +------------------------+
 |   Cloudflare Workers   | (archguard - gateway)
@@ -55,14 +55,18 @@ ArchGuard AI is designed with an Enterprise-grade Serverless Edge Architecture t
 
 ```
 
-* Zero-Data Retention Policy: Your source code is analyzed at the edge on serverless infrastructure. No data is cached, stored, or used for model training, satisfying strict banking and fintech security requirements.
-* Fault-Tolerant Pipeline: Built with an asynchronous queue network and a dynamic AI model fallback matrix to ensure 100% availability and prevent GitHub runner execution timeouts.
+* **Zero-Trust OIDC Authentication**: We use GitHub OpenID Connect (OIDC) to establish a secure, cryptographic identity. No API keys or secrets are required or stored.
+* **Zero-Data Retention Policy**: Your source code is analyzed at the edge on stateless serverless infrastructure. No data is cached, stored, logged, or used for model training, satisfying strict banking and fintech security requirements.
+* **Fault-Tolerant Pipeline**: Built with an asynchronous queue network and a dynamic AI model fallback matrix to ensure 100% availability and prevent GitHub runner execution timeouts.
 
 ---
 
 ## Quick Start (30 Seconds Integration)
 
-To integrate ArchGuard AI into your repository, create a workflow file at `.github/workflows/archguard.yml` with the following configuration:
+ArchGuard AI offers two flexible ways to run: **Free Serverless Gateway** (Default) or **Bring Your Own Key (BYOK)**.
+
+### Option 1: Free Serverless Gateway (Default)
+To integrate ArchGuard AI into your repository using our free edge AI gateway, create a workflow file at `.github/workflows/archguard.yml` with the following configuration:
 
 ```yaml
 name: ArchGuard AI Architectural Review
@@ -76,20 +80,52 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write # Required for ArchGuard to publish PR comments
+      contents: read       # Required to read the PR diff
+      id-token: write      # Required for Zero-Trust OIDC Authentication
+    steps:
+      - name: Run ArchGuard AI Auditor
+        uses: archguard-labs/action@main  # Replace @main with @v1.x tags for stable production environments
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # CUSTOM_PROMPT: "Optional: Reject any PR that uses Vue Mixins or hardcodes SQL queries."
+```
+
+### Option 2: Bring Your Own Key (BYOK)
+If you prefer complete data privacy or want to use your own LLM limits, you can route the AI processing directly to your own provider (e.g. OpenAI, DeepSeek, or any custom endpoint), completely bypassing our free gateway.
+
+```yaml
+name: ArchGuard AI Architectural Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  archguard-review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
       contents: read
     steps:
       - name: Run ArchGuard AI Auditor
-        uses: paudang/archguard-ai@main  # Replace @main with @v1.x tags for stable production environments
+        uses: archguard-labs/action@main
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AGENT_AI_KEY: ${{ secrets.OPENAI_API_KEY }} # Triggers BYOK mode
+          AI_PROVIDER_URL: "https://api.openai.com/v1/chat/completions" # Optional (Defaults to OpenAI)
+          AI_MODEL: "gpt-4o" # Optional (Defaults to gpt-4o)
+          # CUSTOM_PROMPT: "Optional: Reject any PR that uses Vue Mixins or hardcodes SQL queries."
 ```
 
 ## Inputs Configuration
 
 | Input Parameter | Description | Required | Default |
 | :--- | :--- | :--- | :--- |
-| `GITHUB_TOKEN` | Automatically generated repository token to authorize ArchGuard to post structural review comments onto your Pull Requests. | **Yes** | N/A |
-| `AGENT_AI_KEY` | (Optional) A custom API key if you want to route the processing payload to your private enterprise AI endpoint instead of our free serverless edge tier. | No | N/A|
+| `GITHUB_TOKEN` | Automatically generated repository token to authorize ArchGuard to post structural review comments onto your Pull Requests. | **Yes** | `${{ github.token }}` |
+| `AGENT_AI_KEY` | (Optional) Your custom API key. If provided, the action switches to BYOK mode and completely bypasses the free serverless gateway. | No | N/A |
+| `AI_PROVIDER_URL` | (Optional) The custom AI API endpoint to call. Only used if `AGENT_AI_KEY` is set. | No | `https://api.openai.com/v1/chat/completions` |
+| `AI_MODEL` | (Optional) The specific LLM to use for your provider. Only used if `AGENT_AI_KEY` is set. | No | `gpt-4o` |
+| `CUSTOM_PROMPT` | (Optional) Inject your own company-specific architectural rules or coding standards directly into the AI's Brain (System Prompt). | No | N/A |
 
 ## Product Roadmap
 

@@ -1,6 +1,6 @@
 name: 'ArchGuard AI Reviewer'
 description: 'Automate Pull Request audits for clean architecture, decoupling, and security standards using serverless AI.'
-author: 'paudang'
+author: 'archguard-labs'
 branding:
   icon: 'shield'
   color: 'blue'
@@ -12,6 +12,15 @@ inputs:
     default: '${{ github.token }}'
   AGENT_AI_KEY:
     description: 'Optional: Your personal custom AI Provider API Key. If not provided, the action defaults to the free serverless gateway.'
+    required: false
+  AI_PROVIDER_URL:
+    description: 'Optional: The API endpoint of your custom AI provider (e.g. https://api.openai.com/v1/chat/completions). Required if AGENT_AI_KEY is set.'
+    required: false
+  AI_MODEL:
+    description: 'Optional: The model to use with your custom AI provider.'
+    required: false
+  CUSTOM_PROMPT:
+    description: 'Optional: Inject additional custom architectural rules or context into the AI System Prompt.'
     required: false
 
 runs:

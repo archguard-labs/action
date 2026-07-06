@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
+      contents: read
+      id-token: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -27,4 +29,4 @@ jobs:
         uses: ./
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CUSTOM_GATEWAY_URL: "https://archguard-gateway.paudang.workers.dev"
+          CUSTOM_GATEWAY_URL: "https://archguard-gateway.archguard-labs.workers.dev"
