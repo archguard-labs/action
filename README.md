@@ -17,8 +17,8 @@ Most automated code reviewers catch syntax errors, linting issues, or formatting
 
 ## Architecture Overview
 ArchGuard AI is designed with an Enterprise-grade Serverless Edge Architecture to ensure zero-maintenance, infinite scalability, and top-tier security. The project is split into two components:
-* Client Side (GitHub Action Runner): [archguard-ai](https://github.com/paudang/archguard-ai)
-* Server Side (Edge Gateway): [archguard-gateway](https://github.com/paudang/archguard-gateway)
+* Client Side (GitHub Action Runner): [archguard-labs/action](https://github.com/archguard-labs/action)
+* Server Side (Edge Gateway): [archguard-labs/gateway](https://github.com/archguard-labs/gateway)
 
 ```
 +------------------------+
@@ -79,7 +79,7 @@ jobs:
       contents: read
     steps:
       - name: Run ArchGuard AI Auditor
-        uses: paudang/archguard-ai@main  # Replace @main with @v1.x tags for stable production environments
+        uses: archguard-labs/action@main  # Replace @main with @v1.x tags for stable production environments
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```

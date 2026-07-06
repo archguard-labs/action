@@ -1,6 +1,6 @@
 name: 'ArchGuard AI Reviewer'
 description: 'Automate Pull Request audits for clean architecture, decoupling, and security standards using serverless AI.'
-author: 'paudang'
+author: 'archguard-labs'
 branding:
   icon: 'shield'
   color: 'blue'

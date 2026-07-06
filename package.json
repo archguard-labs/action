@@ -4,7 +4,7 @@
   "description": "AI Architect Agent",
   "main": "dist/index.js",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --format=esm --platform=node --outfile=dist/index.js"
+    "build": "ncc build src/index.ts -o dist --minify"
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
