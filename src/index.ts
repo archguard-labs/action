@@ -18,8 +18,13 @@ async function run() {
         console.log("[ArchGuard] Comment does not tag @archguard-ai. Skipping.");
         return;
       }
-      chatopsContext = `\n\n===========================\nCRITICAL CHATOPS INQUIRY:\nThe developer just commented: "${commentBody}".\n\nYOUR MISSION: If the user is asking a conversational question or saying hello, answer it directly and concisely WITHOUT performing a code review. HOWEVER, if the user explicitly asks you to "re-check", "review again", or "audit", you MUST perform a full architectural code review using the checklist!`;
-      console.log(`[ArchGuard] ChatOps triggered for PR #${pull_number}`);
+      const commentLower = commentBody.toLowerCase();
+      if (commentLower.includes('re-check') || commentLower.includes('review again') || commentLower.includes('audit')) {
+        console.log("[ArchGuard] User requested a full re-review. Bypassing ChatOps conversational context.");
+      } else {
+        chatopsContext = `\n\n===========================\nCRITICAL CHATOPS INQUIRY:\nThe developer just commented: "${commentBody}".\n\nYOUR MISSION: You MUST answer their question or respond to their comment DIRECTLY and CONCISELY. DO NOT perform a code review. DO NOT use the checklist!`;
+        console.log(`[ArchGuard] ChatOps triggered for PR #${pull_number}`);
+      }
     }
 
     const agentAiKey = core.getInput('AGENT_AI_KEY', { required: false });
