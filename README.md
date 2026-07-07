@@ -140,6 +140,36 @@ jobs:
           # CUSTOM_PROMPT: "Optional: Reject any PR that uses Vue Mixins or hardcodes SQL queries."
 ```
 
+## How to Use (Features Guide)
+
+Once integrated, ArchGuard AI works automatically in the background. Here is how you can leverage its full power:
+
+### 1. Automated Architecture Review
+Simply open a Pull Request. ArchGuard will automatically fetch the Git Diff and audit the code. If it finds architectural flaws (like Tight Coupling or Mass Assignment), it will leave a detailed PR comment with a **1-click suggestion block** to fix the issue.
+
+### 2. Company-Specific Rules
+You don't need to configure anything in the workflow file to use custom rules. 
+Just create a file named `.archguardrules` at the root of your repository:
+```text
+1. All models must be in the src/domain folder.
+2. Caching logic must use the generic CacheService, never Redis directly.
+```
+ArchGuard will automatically detect this file and aggressively enforce these rules alongside its core architecture checks.
+
+### 3. ChatOps (Interactive AI Bot)
+If you disagree with a review or need more context, you can chat directly with ArchGuard AI. 
+Simply reply to the Pull Request and tag the bot:
+> `@archguard-ai Can you explain why this is considered tight coupling?`
+
+*Note: You must have `issue_comment: types: [created]` in your workflow triggers for ChatOps to work.*
+
+### 4. Technical Debt Dashboard
+ArchGuard Gateway tracks the number of PRs reviewed and the architectural flaws blocked for your repository in real-time.
+You can view your repository's Technical Debt Dashboard by visiting:
+`https://archguard-gateway.archguard-labs.workers.dev/dashboard/YOUR_ORG/YOUR_REPO`
+
+---
+
 ## Inputs Configuration
 
 | Input Parameter | Description | Required | Default |
