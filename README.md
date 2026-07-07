@@ -12,6 +12,7 @@ Most automated code reviewers catch syntax errors, linting issues, or formatting
 * Architectural Decoupling: Detects infrastructure leakage (e.g., when Controllers, Use Cases, or Domain layers directly invoke Mongoose models, Sequelize definitions, Redis clients, or Axios handlers without a clean abstraction/repository layer).
 * Stateless and Enterprise Security: Spots critical architectural vulnerabilities like Mass Assignment (dumping unvalidated client req.body directly into database creation, especially fields like role or permissions), hardcoded secrets, and missing global error handlers.
 * 1-Touch Smart Fixes: Generates real-time structural refactoring code blocks directly using GitHub's native markdown suggestion format. You can apply the architectural fix with a single click.
+* Company-Specific Rules (Custom Context Injection): Automatically detects and enforces your team's unique guidelines by reading a `.archguardrules` file from your repository root.
 
 ---
 
@@ -58,6 +59,22 @@ ArchGuard AI is designed with an Enterprise-grade Serverless Edge Architecture t
 * **Zero-Trust OIDC Authentication**: We use GitHub OpenID Connect (OIDC) to establish a secure, cryptographic identity. No API keys or secrets are required or stored.
 * **Zero-Data Retention Policy**: Your source code is analyzed at the edge on stateless serverless infrastructure. No data is cached, stored, logged, or used for model training, satisfying strict banking and fintech security requirements.
 * **Fault-Tolerant Pipeline**: Built with an asynchronous queue network and a dynamic AI model fallback matrix to ensure 100% availability and prevent GitHub runner execution timeouts.
+
+---
+
+## Company-Specific Rules (Custom Context Injection)
+
+Every company has its own architectural guidelines. ArchGuard AI allows you to inject your organization's specific rules directly into the AI's system prompt.
+
+Simply create a `.archguardrules` file in the root of your repository. For example:
+
+```text
+1. All new models must be defined in the src/domain folder.
+2. Direct calls to database from controllers are strictly prohibited.
+3. All dates must be returned in ISO-8601 format.
+```
+
+When ArchGuard AI runs, it will automatically detect this file and enforce your custom standards alongside its core architectural checks.
 
 ---
 

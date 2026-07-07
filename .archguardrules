@@ -1,0 +1,3 @@
+1. All new models must be defined in the `src/domain` folder.
+2. Direct calls to database from controllers are strictly prohibited, except for logging purposes.
+3. All dates must be returned in ISO-8601 format.

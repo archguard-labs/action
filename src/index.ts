@@ -1,5 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import * as fs from 'fs';
+import * as path from 'path';
 import { ARCHITECT_SKILLS_PLAN } from './skills';
 
 async function run() {
@@ -37,6 +39,15 @@ async function run() {
     
     if (customPrompt) {
       systemPrompt += `\n\nADDITIONAL USER RULES:\n${customPrompt}`;
+    }
+
+    const workspacePath = process.env.GITHUB_WORKSPACE || process.cwd();
+    const rulesPath = path.join(workspacePath, '.archguardrules');
+    
+    if (fs.existsSync(rulesPath)) {
+      const companyRules = fs.readFileSync(rulesPath, 'utf8');
+      console.log("[ArchGuard] Found .archguardrules file! Injecting Company-Specific Rules into AI Context...");
+      systemPrompt += `\n\nCOMPANY-SPECIFIC ARCHITECTURAL RULES (STRICT COMPLIANCE REQUIRED):\n${companyRules}`;
     }
 
     if (agentAiKey) {
