@@ -1,5 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import * as fs from 'fs';
+import * as path from 'path';
 import { ARCHITECT_SKILLS_PLAN } from './skills';
 
 async function run() {
@@ -7,6 +9,18 @@ async function run() {
     const token = core.getInput('GITHUB_TOKEN', { required: true });
     const octokit = github.getOctokit(token);
     const { owner, repo, number: pull_number } = github.context.issue;
+
+    // ChatOps Logic
+    let chatopsContext = "";
+    if (github.context.eventName === 'issue_comment' && github.context.payload.comment) {
+      const commentBody = github.context.payload.comment.body;
+      if (!commentBody.includes('@archguard-ai')) {
+        console.log("[ArchGuard] Comment does not tag @archguard-ai. Skipping.");
+        return;
+      }
+      chatopsContext = `\n\nUSER CHATOPS INQUIRY:\nThe developer replied with the following comment/question: "${commentBody}".\nPlease answer their question directly, explaining the architectural reasoning or adjusting your review if necessary.`;
+      console.log(`[ArchGuard] ChatOps triggered for PR #${pull_number}`);
+    }
 
     const agentAiKey = core.getInput('AGENT_AI_KEY', { required: false });
 
@@ -37,6 +51,19 @@ async function run() {
     
     if (customPrompt) {
       systemPrompt += `\n\nADDITIONAL USER RULES:\n${customPrompt}`;
+    }
+
+    if (chatopsContext) {
+      systemPrompt += chatopsContext;
+    }
+
+    const workspacePath = process.env.GITHUB_WORKSPACE || process.cwd();
+    const rulesPath = path.join(workspacePath, '.archguardrules');
+    
+    if (fs.existsSync(rulesPath)) {
+      const companyRules = fs.readFileSync(rulesPath, 'utf8');
+      console.log("[ArchGuard] Found .archguardrules file! Injecting Company-Specific Rules into AI Context...");
+      systemPrompt += `\n\nCOMPANY-SPECIFIC ARCHITECTURAL RULES (STRICT COMPLIANCE REQUIRED):\n${companyRules}`;
     }
 
     if (agentAiKey) {

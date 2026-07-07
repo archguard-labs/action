@@ -12,6 +12,9 @@ Most automated code reviewers catch syntax errors, linting issues, or formatting
 * Architectural Decoupling: Detects infrastructure leakage (e.g., when Controllers, Use Cases, or Domain layers directly invoke Mongoose models, Sequelize definitions, Redis clients, or Axios handlers without a clean abstraction/repository layer).
 * Stateless and Enterprise Security: Spots critical architectural vulnerabilities like Mass Assignment (dumping unvalidated client req.body directly into database creation, especially fields like role or permissions), hardcoded secrets, and missing global error handlers.
 * 1-Touch Smart Fixes: Generates real-time structural refactoring code blocks directly using GitHub's native markdown suggestion format. You can apply the architectural fix with a single click.
+* Company-Specific Rules (Custom Context Injection): Automatically detects and enforces your team's unique guidelines by reading a `.archguardrules` file from your repository root.
+* ChatOps (Interactive Bot): Tag `@archguard-ai` in a PR comment to ask architectural questions or instruct it to re-review specific files.
+* Technical Debt Dashboard: View real-time architectural analytics for your repository via the Cloudflare KV Dashboard endpoint.
 
 ---
 
@@ -61,6 +64,8 @@ ArchGuard AI is designed with an Enterprise-grade Serverless Edge Architecture t
 
 ---
 
+
+
 ## Quick Start (30 Seconds Integration)
 
 ArchGuard AI offers two flexible ways to run: **Free Serverless Gateway** (Default) or **Bring Your Own Key (BYOK)**.
@@ -74,6 +79,8 @@ name: ArchGuard AI Architectural Review
 on:
   pull_request:
     types: [opened, synchronize]
+  issue_comment:
+    types: [created]
 
 jobs:
   archguard-review:
@@ -99,6 +106,8 @@ name: ArchGuard AI Architectural Review
 on:
   pull_request:
     types: [opened, synchronize]
+  issue_comment:
+    types: [created]
 
 jobs:
   archguard-review:
@@ -116,6 +125,36 @@ jobs:
           AI_MODEL: "gpt-4o" # Optional (Defaults to gpt-4o)
           # CUSTOM_PROMPT: "Optional: Reject any PR that uses Vue Mixins or hardcodes SQL queries."
 ```
+
+## How to Use (Features Guide)
+
+Once integrated, ArchGuard AI works automatically in the background. Here is how you can leverage its full power:
+
+### 1. Automated Architecture Review
+Simply open a Pull Request. ArchGuard will automatically fetch the Git Diff and audit the code. If it finds architectural flaws (like Tight Coupling or Mass Assignment), it will leave a detailed PR comment with a **1-click suggestion block** to fix the issue.
+
+### 2. Company-Specific Rules
+You don't need to configure anything in the workflow file to use custom rules. 
+Just create a file named `.archguardrules` at the root of your repository:
+```text
+1. All models must be in the src/domain folder.
+2. Caching logic must use the generic CacheService, never Redis directly.
+```
+ArchGuard will automatically detect this file and aggressively enforce these rules alongside its core architecture checks.
+
+### 3. ChatOps (Interactive AI Bot)
+If you disagree with a review or need more context, you can chat directly with ArchGuard AI. 
+Simply reply to the Pull Request and tag the bot:
+> `@archguard-ai Can you explain why this is considered tight coupling?`
+
+*Note: You must have `issue_comment: types: [created]` in your workflow triggers for ChatOps to work.*
+
+### 4. Technical Debt Dashboard
+ArchGuard Gateway tracks the number of PRs reviewed and the architectural flaws blocked for your repository in real-time.
+You can view your repository's Technical Debt Dashboard by visiting:
+`https://archguard-gateway.archguard-labs.workers.dev/dashboard/YOUR_ORG/YOUR_REPO`
+
+---
 
 ## Inputs Configuration
 
