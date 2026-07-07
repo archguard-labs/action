@@ -10,6 +10,18 @@ async function run() {
     const octokit = github.getOctokit(token);
     const { owner, repo, number: pull_number } = github.context.issue;
 
+    // ChatOps Logic
+    let chatopsContext = "";
+    if (github.context.eventName === 'issue_comment' && github.context.payload.comment) {
+      const commentBody = github.context.payload.comment.body;
+      if (!commentBody.includes('@archguard-ai')) {
+        console.log("[ArchGuard] Comment does not tag @archguard-ai. Skipping.");
+        return;
+      }
+      chatopsContext = `\n\nUSER CHATOPS INQUIRY:\nThe developer replied with the following comment/question: "${commentBody}".\nPlease answer their question directly, explaining the architectural reasoning or adjusting your review if necessary.`;
+      console.log(`[ArchGuard] ChatOps triggered for PR #${pull_number}`);
+    }
+
     const agentAiKey = core.getInput('AGENT_AI_KEY', { required: false });
 
     console.log(`[ArchGuard] Fetching Git Diff for PR #${pull_number}...`);
@@ -39,6 +51,10 @@ async function run() {
     
     if (customPrompt) {
       systemPrompt += `\n\nADDITIONAL USER RULES:\n${customPrompt}`;
+    }
+
+    if (chatopsContext) {
+      systemPrompt += chatopsContext;
     }
 
     const workspacePath = process.env.GITHUB_WORKSPACE || process.cwd();

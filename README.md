@@ -13,6 +13,8 @@ Most automated code reviewers catch syntax errors, linting issues, or formatting
 * Stateless and Enterprise Security: Spots critical architectural vulnerabilities like Mass Assignment (dumping unvalidated client req.body directly into database creation, especially fields like role or permissions), hardcoded secrets, and missing global error handlers.
 * 1-Touch Smart Fixes: Generates real-time structural refactoring code blocks directly using GitHub's native markdown suggestion format. You can apply the architectural fix with a single click.
 * Company-Specific Rules (Custom Context Injection): Automatically detects and enforces your team's unique guidelines by reading a `.archguardrules` file from your repository root.
+* ChatOps (Interactive Bot): Tag `@archguard-ai` in a PR comment to ask architectural questions or instruct it to re-review specific files.
+* Technical Debt Dashboard: View real-time architectural analytics for your repository via the Cloudflare KV Dashboard endpoint.
 
 ---
 
@@ -91,6 +93,8 @@ name: ArchGuard AI Architectural Review
 on:
   pull_request:
     types: [opened, synchronize]
+  issue_comment:
+    types: [created]
 
 jobs:
   archguard-review:
@@ -116,6 +120,8 @@ name: ArchGuard AI Architectural Review
 on:
   pull_request:
     types: [opened, synchronize]
+  issue_comment:
+    types: [created]
 
 jobs:
   archguard-review:
