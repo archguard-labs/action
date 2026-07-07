@@ -64,21 +64,7 @@ ArchGuard AI is designed with an Enterprise-grade Serverless Edge Architecture t
 
 ---
 
-## Company-Specific Rules (Custom Context Injection)
 
-Every company has its own architectural guidelines. ArchGuard AI allows you to inject your organization's specific rules directly into the AI's system prompt.
-
-Simply create a `.archguardrules` file in the root of your repository. For example:
-
-```text
-1. All new models must be defined in the src/domain folder.
-2. Direct calls to database from controllers are strictly prohibited.
-3. All dates must be returned in ISO-8601 format.
-```
-
-When ArchGuard AI runs, it will automatically detect this file and enforce your custom standards alongside its core architectural checks.
-
----
 
 ## Quick Start (30 Seconds Integration)
 
