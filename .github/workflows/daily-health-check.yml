@@ -1,0 +1,72 @@
+name: Daily Health Check
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run daily at midnight
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  e2e-health-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create Dummy Branch
+        id: create_branch
+        run: |
+          BRANCH_NAME="health-check-$(date +%s)"
+          git checkout -b $BRANCH_NAME
+          
+          # Create a dummy bad code file to trigger a review
+          echo "const db = require('mongoose');" > dummy-bad-code.js
+          echo "module.exports.getUsers = function(req, res) { db.query('SELECT * FROM users'); }" >> dummy-bad-code.js
+          
+          git add dummy-bad-code.js
+          git commit -m "chore: dummy bad code for health check"
+          git push origin $BRANCH_NAME
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        id: create_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_URL=$(gh pr create --title "[E2E] Daily Health Check" --body "Automated PR to verify ArchGuard AI functionality." --base main --head ${{ steps.create_branch.outputs.branch_name }})
+          echo "Created PR: $PR_URL"
+          # Extract PR number from URL
+          PR_NUMBER=${PR_URL##*/}
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Wait for ArchGuard AI Review
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Waiting 45 seconds for ArchGuard AI to process the PR and leave a comment..."
+          sleep 45
+          
+          COMMENTS=$(gh pr view ${{ steps.create_pr.outputs.pr_number }} --json comments --jq '.comments[].body')
+          
+          if [[ "$COMMENTS" == *"ArchGuard AI Architectural Review"* ]]; then
+            echo "✅ Health Check Passed: AI successfully reviewed the code!"
+          else
+            echo "❌ Health Check Failed: No review comment found from ArchGuard AI!"
+            exit 1
+          fi
+
+      - name: Cleanup (Close PR and Delete Branch)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr close ${{ steps.create_pr.outputs.pr_number }}
+          git push origin --delete ${{ steps.create_branch.outputs.branch_name }} || true
