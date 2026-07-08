@@ -12,10 +12,11 @@ async function run() {
 
     // ChatOps Logic
     let chatopsContext = "";
+    const botTag = core.getInput('BOT_TAG', { required: false }) || '@archguard-ai';
     if (github.context.eventName === 'issue_comment' && github.context.payload.comment) {
       const commentBody = github.context.payload.comment.body;
-      if (!commentBody.includes('@archguard-ai')) {
-        console.log("[ArchGuard] Comment does not tag @archguard-ai. Skipping.");
+      if (!commentBody.includes(botTag)) {
+        console.log(`[ArchGuard] Comment does not tag ${botTag}. Skipping.`);
         return;
       }
       const commentLower = commentBody.toLowerCase();
